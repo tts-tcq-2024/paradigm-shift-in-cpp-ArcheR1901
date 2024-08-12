@@ -12,39 +12,22 @@ Language currentLanguage = Language::ENGLISH;
 
 // Function to get the warning tolerance
 float getWarningTolerance(float max) {
-  return 0.05 * max;
+  return 0.05f * max;
 }
 
 // Generic function to check range and return status
 RangeStatus checkRange(float value, float min, float max) {
   float tolerance = getWarningTolerance(max);
-  if (value < min) {
-    return RangeStatus::LOW;
-  }
-  if (value > max) {
-    return RangeStatus::HIGH;
-  }
-  if (value < min + tolerance) {
-    return RangeStatus::WARNING;
-  }
-  if (value > max - tolerance) {
-    return RangeStatus::WARNING;
-  }
+  if (value < min) return RangeStatus::LOW;
+  if (value > max) return RangeStatus::HIGH;
+  if (value < min + tolerance || value > max - tolerance) return RangeStatus::WARNING;
   return RangeStatus::OK;
 }
 
 // Specific range check functions using the generic function
-RangeStatus checkTemperature(float temperature) {
-  return checkRange(temperature, 0, 45);
-}
-
-RangeStatus checkSoc(float soc) {
-  return checkRange(soc, 20, 80);
-}
-
-RangeStatus checkChargeRate(float chargeRate) {
-  return checkRange(chargeRate, 0, 0.8);
-}
+RangeStatus checkTemperature(float temperature) { return checkRange(temperature, 0, 45); }
+RangeStatus checkSoc(float soc) { return checkRange(soc, 20, 80); }
+RangeStatus checkChargeRate(float chargeRate) { return checkRange(chargeRate, 0, 0.8); }
 
 bool batteryIsOk(float temperature, float soc, float chargeRate) {
   return checkTemperature(temperature) == RangeStatus::OK &&
@@ -52,7 +35,7 @@ bool batteryIsOk(float temperature, float soc, float chargeRate) {
          checkChargeRate(chargeRate) == RangeStatus::OK;
 }
 
-// Function to get messages based on language
+// Function to get messages based on language and status
 const char* getMessage(const char* parameterName, RangeStatus status) {
   static map<Language, map<RangeStatus, map<const char*, const char*>>> messages = {
     { Language::ENGLISH, {
@@ -109,23 +92,11 @@ void printStatusMessage(const char* parameterName, RangeStatus status) {
   }
 }
 
-// Specific status print functions using the generic function
-void printTemperatureStatus(float temperature) {
-  printStatusMessage("Temperature", checkTemperature(temperature));
-}
-
-void printSocStatus(float soc) {
-  printStatusMessage("State of Charge", checkSoc(soc));
-}
-
-void printChargeRateStatus(float chargeRate) {
-  printStatusMessage("Charge Rate", checkChargeRate(chargeRate));
-}
-
+// Function to print the status of all parameters
 void printBatteryStatus(float temperature, float soc, float chargeRate) {
-  printTemperatureStatus(temperature);
-  printSocStatus(soc);
-  printChargeRateStatus(chargeRate);
+  printStatusMessage("Temperature", checkTemperature(temperature));
+  printStatusMessage("State of Charge", checkSoc(soc));
+  printStatusMessage("Charge Rate", checkChargeRate(chargeRate));
 }
 
 int main() {
